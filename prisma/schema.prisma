@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./stock.db"
+}
+
+model product {
+  barcode String @id
+  cloth Boolean
+  size String?
+  code String?
+  name String
+  fabric String?
+  Sort Int?
+  price Int
+  brand String
+  stock stock[]
+  actionDetail actionDetail[]
+}
+
+model stock{
+  id Int @id @default(autoincrement())
+  barcode String @unique 
+  connect product @relation(fields: [barcode],references: [barcode])
+  qty Int @default(0)
+  updateAt DateTime @updatedAt
+}
+
+model user{
+  username String @id
+  firstName String
+  lastName String
+  password String
+  code Int
+  action action[]
+}
+
+model actionType{
+  id Int @id @default(autoincrement())
+  actionType String
+  action action[]
+}
+
+model action {
+  id Int @id @default(autoincrement())
+  actionid Int
+  actionType actionType @relation(fields: [actionid],references: [id])
+  time DateTime @default(now())
+  user user@relation(fields:[username],references: [username])
+  shopName String
+  shop shop @relation(fields: [shopName] ,references: [shopName])
+  username String
+  actionDetail actionDetail[]
+}
+
+model shop {
+  shopName String @id 
+  action action[]
+}
+model actionDetail {
+  id Int @id @default(autoincrement())
+  actionid Int
+  action action @relation(fields: [actionid],references: [id])
+  barcode String
+  Product product @relation(fields: [barcode],references: [barcode])
+  amout Int
+}
