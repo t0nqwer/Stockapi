@@ -1,19 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 import axios from "axios";
 import { log } from "console";
+import https from "https";
 const prisma = new PrismaClient();
 
 export const UpdateProductData = async (req, res, next) => {
   try {
-    const response = await axios.get(
-      // "https://khwanta-api2546.com/stock/stockdata"
-      "http://localhost:7070/stock//stockdata"
-    );
-    const data = response.data.map((item) => {
-      return { ...item, qty: 0 };
-    });
+    const response = await axios.get("http://167.172.69.153/barcode");
 
-    const list = data.map(async (item) => {
+    response.data.map(async (item) => {
       const dat = await prisma.product.upsert({
         where: { barcode: item.barcode },
         update: {
@@ -24,7 +19,7 @@ export const UpdateProductData = async (req, res, next) => {
           name: item.name,
           price: +item.price,
           brand: item.brand,
-          Sort: item.sort,
+          sort: item.sort,
         },
         create: {
           barcode: item.barcode,
@@ -35,32 +30,18 @@ export const UpdateProductData = async (req, res, next) => {
           name: item.name,
           price: +item.price,
           brand: item.brand,
-          Sort: item.sort,
+          sort: item.sort,
         },
       });
       return dat;
     });
-    // if (list) {
-    //   data.map(async (item) => {
-    //     const check = await prisma.stock.findUnique({
-    //       where: { barcode: item.barcode },
-    //     });
-    //     if (!check) {
-    //       await prisma.stock.create({
-    //         data: {
-    //           barcode: item.barcode,
-    //           qty: 0,
-    //         },
-    //       });
-    //     }
-    //   });
-    // }
     next();
-    // res.status(200).json({ list, data });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: error.message });
   }
 };
+
 export const barcodeCheck = async (req, res) => {
   try {
     const barcode = await prisma.product.findMany({
@@ -88,14 +69,75 @@ export const barcodeCheck = async (req, res) => {
   }
 };
 
+export const checkcheck = async (req, res) => {
+  try {
+    const response = await axios.get("http://167.172.69.153/barcode");
+    response.data.map(async (item) => {
+      const dat = await prisma.product.upsert({
+        where: { barcode: item.barcode },
+        update: {
+          cloth: item.cloth,
+          size: item.size,
+          code: item.code,
+          fabric: item.fabric,
+          name: item.name,
+          price: +item.price,
+          brand: item.brand,
+          sort: item.sort,
+        },
+        create: {
+          barcode: item.barcode,
+          cloth: item.cloth,
+          size: item.size,
+          code: item.code,
+          fabric: item.fabric,
+          name: item.name,
+          price: +item.price,
+          brand: item.brand,
+          sort: item.sort,
+        },
+      });
+
+      return dat;
+    });
+    console.log(1);
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const barcodeCh = async (req, res) => {
+  try {
+    const barcode = await prisma.product.findMany({
+      select: {
+        barcode: true,
+      },
+    });
+    barcode.map(async (item) => {
+      const check = await prisma.stock.findUnique({
+        where: { barcode: item.barcode },
+      });
+      if (!check) {
+        await prisma.stock.create({
+          data: {
+            barcode: item.barcode,
+            qty: 0,
+          },
+        });
+      }
+    });
+    console.log(2);
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+setInterval(checkcheck, 10000);
+setInterval(barcodeCh, 10000);
+
 export const ListProduct = async (req, res) => {
-  console.log("req.listproduct");
   const { search } = req.query;
-  log(req.query);
   try {
     const products = await prisma.product.findMany({
       where: {
-        cloth: true,
         OR: [
           { barcode: { contains: search } },
           { size: { contains: search } },
@@ -112,12 +154,12 @@ export const ListProduct = async (req, res) => {
         code: true,
         name: true,
         fabric: true,
-        Sort: true,
+        sort: true,
         price: true,
         brand: true,
         stock: true,
       },
-      orderBy: [{ code: "asc" }, { fabric: "asc" }, { Sort: "asc" }],
+      orderBy: [{ code: "asc" }, { fabric: "asc" }, { sort: "asc" }],
     });
     res.status(200).json(products);
   } catch (error) {
@@ -125,11 +167,50 @@ export const ListProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
+const agent = new https.Agent({
+  rejectUnauthorized: false,
+});
 export const StockIn = async (req, res) => {
+  const input = req.body;
+  const d = new Date();
+  const dformat = [
+    d.getMonth() + 1,
+    d.getDate(),
+    d.getFullYear(),
+    d.getHours(),
+    d.getMinutes(),
+    d.getSeconds(),
+  ].join("");
+
   try {
-    res.status(200).json({ message: "Stock In" });
+    const create = await prisma.$transaction([
+      ...input.map((item) =>
+        prisma.stock.update({
+          where: { barcode: item.barcode },
+          data: { qty: +item.importqty },
+        })
+      ),
+      prisma.action.create({
+        data: {
+          id: dformat,
+          actionid: 1,
+          username: "admin",
+        },
+      }),
+      ...input.map((item) =>
+        prisma.actionDetail.create({
+          data: {
+            actionid: dformat,
+            barcode: item.barcode,
+            amout: item.importqty,
+          },
+        })
+      ),
+    ]);
+    console.log(input);
+    res.status(200).json({ message: "Stock in", create });
   } catch (error) {
+    log(error);
     res.status(500).json({ message: error.message });
   }
 };

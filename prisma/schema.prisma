@@ -17,7 +17,7 @@ model product {
   code String?
   name String
   fabric String?
-  Sort Int?
+  sort Int?
   price Int
   brand String
   stock stock[]
@@ -48,14 +48,15 @@ model actionType{
 }
 
 model action {
-  id Int @id @default(autoincrement())
+  id String @id 
   actionid Int
   actionType actionType @relation(fields: [actionid],references: [id])
   time DateTime @default(now())
   user user@relation(fields:[username],references: [username])
-  shopName String
-  shop shop @relation(fields: [shopName] ,references: [shopName])
+  shopName String?
+  shop shop? @relation(fields: [shopName] ,references: [shopName])
   username String
+  IsOnline Boolean @default(false)
   actionDetail actionDetail[]
 }
 
@@ -65,9 +66,14 @@ model shop {
 }
 model actionDetail {
   id Int @id @default(autoincrement())
-  actionid Int
+  actionid String
   action action @relation(fields: [actionid],references: [id])
   barcode String
   Product product @relation(fields: [barcode],references: [barcode])
   amout Int
+}
+model ProgramSetting{
+  id Int @id @default(autoincrement())
+  ShopName String
+  BarcodeFilePath String?
 }
