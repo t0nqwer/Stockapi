@@ -187,7 +187,11 @@ export const StockIn = async (req, res) => {
       ...input.map((item) =>
         prisma.stock.update({
           where: { barcode: item.barcode },
-          data: { qty: +item.importqty },
+          data: {
+            qty: {
+              increment: item.importqty,
+            },
+          },
         })
       ),
       prisma.action.create({
