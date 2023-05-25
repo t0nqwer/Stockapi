@@ -100,6 +100,30 @@ export const checkcheck = async (req, res) => {
 
       return dat;
     });
+    const items = response.data.map((e) => e.barcode);
+    const currentbarcode = await prisma.product
+      .findMany({
+        select: { barcode: true },
+      })
+      .then((e) => e.map((e) => e.barcode));
+    const deletedbarcode = currentbarcode.filter((e) => !items.includes(e));
+    try {
+      await prisma.$transaction([
+        ...deletedbarcode.map((e) =>
+          prisma.stock.delete({
+            where: { barcode: e },
+          })
+        ),
+        ...deletedbarcode.map((e) =>
+          prisma.product.delete({
+            where: { barcode: e },
+            include: { stock: true, actionDetail: true },
+          })
+        ),
+      ]);
+    } catch (error) {
+      console.log(error.message, 1);
+    }
     console.log(1);
   } catch (error) {
     console.log(error);
@@ -130,8 +154,8 @@ export const barcodeCh = async (req, res) => {
     console.log(error.message);
   }
 };
-setInterval(checkcheck, 10000);
-setInterval(barcodeCh, 10000);
+// setInterval(checkcheck, 10000);
+// setInterval(barcodeCh, 10000);
 
 export const ListProduct = async (req, res) => {
   const { search } = req.query;

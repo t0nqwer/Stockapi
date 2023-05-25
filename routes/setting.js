@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const setting = await prisma.ProgramSetting.findMany();
+    const setting = await prisma.programSetting.findFirst();
     res.status(200).json(setting);
   } catch (error) {
     console.log(error);
