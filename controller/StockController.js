@@ -110,11 +110,6 @@ export const checkcheck = async (req, res) => {
     try {
       await prisma.$transaction([
         ...deletedbarcode.map((e) =>
-          prisma.stock.delete({
-            where: { barcode: e },
-          })
-        ),
-        ...deletedbarcode.map((e) =>
           prisma.product.delete({
             where: { barcode: e },
             include: { stock: true, actionDetail: true },
