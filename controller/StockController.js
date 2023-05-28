@@ -107,18 +107,18 @@ export const checkcheck = async (req, res) => {
       })
       .then((e) => e.map((e) => e.barcode));
     const deletedbarcode = currentbarcode.filter((e) => !items.includes(e));
-    try {
-      await prisma.$transaction([
-        ...deletedbarcode.map((e) =>
-          prisma.product.delete({
-            where: { barcode: e },
-            include: { stock: true, actionDetail: true },
-          })
-        ),
-      ]);
-    } catch (error) {
-      console.log(error.message, 1);
-    }
+    // try {
+    //   await prisma.$transaction([
+    //     ...deletedbarcode.map((e) =>
+    //       prisma.product.delete({
+    //         where: { barcode: e },
+    //         include: { stock: true, actionDetail: true },
+    //       })
+    //     ),
+    //   ]);
+    // } catch (error) {
+    //   console.log(error.message, 1);
+    // }
     console.log(1);
   } catch (error) {
     console.log(error);
