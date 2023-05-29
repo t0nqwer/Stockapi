@@ -9,6 +9,7 @@ import "./socket.io/client.js";
 import { barcodeCh, checkcheck } from "./controller/StockController.js";
 import { Server } from "socket.io";
 import { addSize, updatePrice } from "./socket.io/controller.js";
+import { io } from "socket.io-client";
 const app = express();
 app.use(express.json());
 app.use(morgan("common"));
@@ -29,13 +30,24 @@ checkcheck()
     io.on("connection", (socket) => {
       console.log(socket.id);
       socket.on("price", (data) => {
-        updatePrice(data.barcode, data.price);
+        // updatePrice(data.barcode, data.price);
       });
       socket.on("addSize", (data) => {
-        addSize(data);
+        // addSize(data);
       });
       socket.on("newCloth", (data) => {
-        addSize(data);
+        // addSize(data);
       });
     });
   });
+
+const socket = io("http://167.172.69.153");
+socket.on("price", (data) => {
+  updatePrice(data.barcode, data.price);
+});
+socket.on("addSize", (data) => {
+  addSize(data);
+});
+socket.on("newCloth", (data) => {
+  addSize(data);
+});
