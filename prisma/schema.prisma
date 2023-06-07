@@ -27,7 +27,7 @@ model product {
 model stock{
   id Int @id @default(autoincrement())
   barcode String @unique 
-  connect product @relation(fields: [barcode],references: [barcode])
+  connect product @relation(fields: [barcode],references: [barcode],onDelete: Cascade)
   qty Int @default(0)
   updateAt DateTime @updatedAt
 }
@@ -69,7 +69,7 @@ model actionDetail {
   actionid String
   action action @relation(fields: [actionid],references: [id])
   barcode String
-  Product product @relation(fields: [barcode],references: [barcode])
+  Product product @relation(fields: [barcode],references: [barcode],onDelete: Cascade)
   amout Int
 }
 model ProgramSetting{

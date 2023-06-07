@@ -8,8 +8,9 @@ import settingRoutes from "./routes/setting.js";
 import "./socket.io/client.js";
 import { barcodeCh, checkcheck } from "./controller/StockController.js";
 import { Server } from "socket.io";
-import { addSize, updatePrice } from "./socket.io/controller.js";
+import { addCloth, addSize, updatePrice } from "./socket.io/controller.js";
 import { io } from "socket.io-client";
+import dns from "dns";
 const app = express();
 app.use(express.json());
 app.use(morgan("common"));
@@ -50,4 +51,28 @@ socket.on("addSize", (data) => {
 });
 socket.on("newCloth", (data) => {
   addSize(data);
+});
+
+socket.on("newexample", (data) => {
+  console.log(data);
+  addCloth(data);
+});
+
+function checkInternet(cb) {
+  dns.lookup("google.com", function (err) {
+    if (err && err.code == "ENOTFOUND") {
+      return false;
+    } else {
+      return true;
+    }
+  });
+}
+
+// example usage:
+checkInternet(function (isConnected) {
+  if (isConnected) {
+    console.log("connected to the internet");
+  } else {
+    console.log("not connected to the internet");
+  }
 });

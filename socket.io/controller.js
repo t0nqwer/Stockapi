@@ -49,3 +49,27 @@ export const addSize = async (data) => {
     console.log(error.message);
   }
 };
+export const addCloth = async (data) => {
+  try {
+    await prisma.$transaction([
+      prisma.product.create({
+        data: {
+          barcode: data.barcode,
+          cloth: data.cloth,
+          size: data.size,
+          code: data.code,
+          fabric: data.fabric,
+          price: +data.price,
+          name: data.name,
+          brand: data.brand,
+        },
+      }),
+      prisma.stock.create({
+        data: {
+          barcode: data.barcode,
+          qty: 0,
+        },
+      }),
+    ]);
+  } catch (error) {}
+};

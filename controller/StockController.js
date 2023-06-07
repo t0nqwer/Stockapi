@@ -3,6 +3,7 @@ import axios from "axios";
 import { log } from "console";
 import https from "https";
 const prisma = new PrismaClient();
+import { checkInternet, socketconnect } from "../socket.io/SentData.js";
 
 export const UpdateProductData = async (req, res, next) => {
   try {
@@ -106,7 +107,22 @@ export const checkcheck = async (req, res) => {
         select: { barcode: true },
       })
       .then((e) => e.map((e) => e.barcode));
+
     const deletedbarcode = currentbarcode.filter((e) => !items.includes(e));
+    console.log(deletedbarcode);
+    if (deletedbarcode.length > 0) {
+      await prisma.$transaction([
+        ...deletedbarcode.map((e) =>
+          prisma.product.delete({
+            where: { barcode: e },
+            include: {
+              stock: true,
+              actionDetail: true,
+            },
+          })
+        ),
+      ]);
+    }
     // try {
     //   await prisma.$transaction([
     //     ...deletedbarcode.map((e) =>
@@ -149,8 +165,6 @@ export const barcodeCh = async (req, res) => {
     console.log(error.message);
   }
 };
-// setInterval(checkcheck, 10000);
-// setInterval(barcodeCh, 10000);
 
 export const ListProduct = async (req, res) => {
   const { search } = req.query;
@@ -186,9 +200,7 @@ export const ListProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-const agent = new https.Agent({
-  rejectUnauthorized: false,
-});
+
 export const StockIn = async (req, res) => {
   const input = req.body;
   const d = new Date();
@@ -202,36 +214,43 @@ export const StockIn = async (req, res) => {
   ].join("");
 
   try {
-    const create = await prisma.$transaction([
-      ...input.map((item) =>
-        prisma.stock.update({
-          where: { barcode: item.barcode },
-          data: {
-            qty: {
-              increment: item.importqty,
+    checkInternet(async function (isConnected) {
+      if (isConnected) {
+        const create = await prisma.$transaction([
+          ...input.map((item) =>
+            prisma.stock.update({
+              where: { barcode: item.barcode },
+              data: {
+                qty: {
+                  increment: item.importqty,
+                },
+              },
+            })
+          ),
+          prisma.action.create({
+            data: {
+              id: dformat,
+              actionid: 1,
+              username: "admin",
             },
-          },
-        })
-      ),
-      prisma.action.create({
-        data: {
-          id: dformat,
-          actionid: 1,
-          username: "admin",
-        },
-      }),
-      ...input.map((item) =>
-        prisma.actionDetail.create({
-          data: {
-            actionid: dformat,
-            barcode: item.barcode,
-            amout: item.importqty,
-          },
-        })
-      ),
-    ]);
-    console.log(input);
-    res.status(200).json({ message: "Stock in", create });
+          }),
+          ...input.map((item) =>
+            prisma.actionDetail.create({
+              data: {
+                actionid: dformat,
+                barcode: item.barcode,
+                amout: item.importqty,
+              },
+            })
+          ),
+        ]);
+        socketconnect.emit("stockIn", create);
+        console.log(input, "wqe");
+        res.status(200).json({ message: "Stock in", create });
+      } else {
+        console.log("not connected to the internet");
+      }
+    });
   } catch (error) {
     log(error);
     res.status(500).json({ message: error.message });
