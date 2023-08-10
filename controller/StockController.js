@@ -71,7 +71,7 @@ export const barcodeCheck = async (req, res) => {
 
 export const checkcheck = async (req, res, next) => {
   try {
-    const response = await axios.get("http://localhost:7080/barcode");
+    const response = await axios.get(`${url}/barcode`);
     response.data.map(async (item) => {
       const dat = await prisma.product.upsert({
         where: { barcode: item.barcode },
