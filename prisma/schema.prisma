@@ -52,10 +52,12 @@ model action {
   actionid Int
   actionType actionType @relation(fields: [actionid],references: [id])
   time DateTime @default(now())
-  user user@relation(fields:[username],references: [username])
+  user user @relation(fields:[username],references: [username])
   shopName String?
   shop shop? @relation(fields: [shopName] ,references: [shopName])
   username String
+  status String @default("done")
+  actionFinished DateTime?
   IsOnline Boolean @default(false)
   actionDetail actionDetail[]
 }
@@ -67,9 +69,9 @@ model shop {
 model actionDetail {
   id Int @id @default(autoincrement())
   actionid String
-  action action @relation(fields: [actionid],references: [id])
+  action action @relation(fields: [actionid],references: [id], onDelete: Cascade)
   barcode String
-  Product product @relation(fields: [barcode],references: [barcode],onDelete: Cascade)
+  Product product @relation(fields: [barcode],references: [barcode])
   amout Int
 }
 model ProgramSetting{

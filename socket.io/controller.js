@@ -17,7 +17,7 @@ export const updatePrice = async (barcode, price) => {
     console.log(error.message);
   }
 };
-export const addSize = async (data) => {
+export const addProduct = async (data) => {
   try {
     console.log(data);
     await prisma.$transaction([
